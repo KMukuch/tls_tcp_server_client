@@ -103,12 +103,6 @@ int tls_write(SSL *ssl, const char *buffer, int bytes_read)
     if(n <= 0)
     {
         int err = SSL_get_error(ssl, n);
-
-        if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE)
-        {
-            return -2; // Retry later
-        }
-
         ERR_print_errors_fp(stderr);
 
         return -1; // Error

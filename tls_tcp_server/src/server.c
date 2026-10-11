@@ -75,10 +75,35 @@ int server_accept_client(int server_fd)
 		
 		return -1;
 	}
-	
+
 	printf("client connected\n");
 	
 	return client_fd;
+}
+
+int server_add_client(struct pollfd *fd_array, int fd_array_size, int client_fd)
+{
+    int i = 1;
+
+    while (i < fd_array_size && fd_array[i].fd != -1)
+    {
+        i++;
+    }
+
+    if (i == fd_array_size)
+    {
+        close(client_fd);
+
+        return -1;
+    }
+
+    fd_array[i].fd = client_fd;
+    fd_array[i].events = POLLIN;
+    fd_array[i].revents = 0;
+
+    printf("client added\n");
+
+    return i;
 }
 
 int server_recv(int fd, char* buffer, int len)
@@ -109,22 +134,11 @@ int server_send(int fd, char* buffer, int len)
 	return 1;
 }
 
-int server_add_client(struct pollfd *fd_array, int fd_counter, int client_fd)
+void server_client_shutdown(struct pollfd *fd_array, int index)
 {
-    fd_array[fd_counter].fd = client_fd;
-    fd_array[fd_counter].events = POLLIN;
-    fd_array[fd_counter].revents = 0;
-
-	fd_counter++;
-
-    printf("TLS client connected\n");
-
-    return fd_counter;
-}
-
-int server_client_shutdown(struct pollfd *fd_array, int client_index, int *fd_counter)
-{
-	
+    close(fd_array[index].fd);
+    fd_array[index].fd = -1;
+    fd_array[index].revents = 0;
 }
 
 int server_close_fds(struct pollfd *fd_array, int len)
@@ -138,5 +152,5 @@ int server_close_fds(struct pollfd *fd_array, int len)
         }
     }
 
-    return 1;
+    return 0;
 }
