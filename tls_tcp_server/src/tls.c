@@ -36,24 +36,98 @@ SSL_CTX *tls_init(void)
 SSL* tls_accept_client(SSL_CTX *ctx, int client_fd)
 {
     SSL *ssl = SSL_new(ctx);
-    if(ssl == NULL || SSL_set_fd(ssl, client_fd) != 1) 
+    if (ssl == NULL)
     {
         ERR_print_errors_fp(stderr);
-        SSL_free(ssl);
         close(client_fd);
+        return NULL;
     }
-    else if(SSL_accept(ssl) != 1)
-    {
-        ERR_print_errors_fp(stderr);
 
+    if (SSL_set_fd(ssl, client_fd) != 1)
+    {
+        ERR_print_errors_fp(stderr);
         SSL_free(ssl);
         close(client_fd);
+        return NULL;
     }
-    
+
+    if (SSL_accept(ssl) != 1)
+    {
+        ERR_print_errors_fp(stderr);
+        SSL_free(ssl);
+        close(client_fd);
+        return NULL;
+    }
+
     return ssl;
 }
 
-void tls_client_shutdown(SSL *ssl)
+void tls_add_client(SSL **ssl_array, int index, SSL *ssl)
 {
-    
+    ssl_array[index] = ssl;
+}
+
+int tls_read(SSL *ssl, char *buffer, int buffer_size)
+{
+    int bytes_read = SSL_read(ssl, buffer, buffer_size - 1);
+
+    if(bytes_read > 0)
+    {
+        buffer[bytes_read] = '\0';
+
+        return bytes_read;
+    }
+
+    int err = SSL_get_error(ssl, bytes_read);
+
+    if(err == SSL_ERROR_ZERO_RETURN)
+    {
+        // Client closed the TLS connection cleanly.
+        return 0;
+    }
+
+    if(err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE)
+    {
+        // Retry when the socket is ready.
+        return -2;
+    }
+
+    ERR_print_errors_fp(stderr);
+
+    return -1;
+}
+
+int tls_write(SSL *ssl, const char *buffer, int bytes_read)
+{
+    int n = SSL_write(ssl, buffer, bytes_read);
+    if(n <= 0)
+    {
+        int err = SSL_get_error(ssl, n);
+
+        if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE)
+        {
+            return -2; // Retry later
+        }
+
+        ERR_print_errors_fp(stderr);
+
+        return -1; // Error
+    }
+
+    return n;
+}
+
+void tls_client_shutdown(SSL **ssl_array, int index)
+{
+    if (ssl_array[index] != NULL)
+    {
+        SSL_shutdown(ssl_array[index]);
+        SSL_free(ssl_array[index]);
+        ssl_array[index] = NULL;
+    }
+}
+
+void tls_close(SSL_CTX *ctx)
+{
+    SSL_CTX_free(ctx);
 }

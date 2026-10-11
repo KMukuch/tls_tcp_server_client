@@ -39,6 +39,7 @@ int server_init(struct pollfd* fd_array, int fd_length)
 	if(bind(server_fd, (struct sockaddr *)&server_addr,sizeof server_addr) == -1)
 	{
 		perror("bind");
+		close(server_fd);
 		
 		return -1;
 	}
@@ -48,11 +49,16 @@ int server_init(struct pollfd* fd_array, int fd_length)
 	if(listen(server_fd, 5) == -1)
 	{
 		perror("listen");
-		
+		close(server_fd);
+
 		return -1;
 	}
 	
 	printf("server is listening  on port 8080\n");
+
+	fd_array[0].fd = server_fd;
+	fd_array[0].events = POLLIN;
+	fd_array[0].revents = 0;
 
 	return server_fd;
 }
@@ -103,11 +109,33 @@ int server_send(int fd, char* buffer, int len)
 	return 1;
 }
 
-int server_close_fds(int* fd_array, int len)
+int server_add_client(struct pollfd *fd_array, int fd_counter, int client_fd)
+{
+    fd_array[fd_counter].fd = client_fd;
+    fd_array[fd_counter].events = POLLIN;
+    fd_array[fd_counter].revents = 0;
+
+	fd_counter++;
+
+    printf("TLS client connected\n");
+
+    return fd_counter;
+}
+
+int server_client_shutdown(struct pollfd *fd_array, int client_index, int *fd_counter)
+{
+	
+}
+
+int server_close_fds(struct pollfd *fd_array, int len)
 {
     for(int i = 0; i < len; i++)
     {
-        close(fd_array[i]);
+        if(fd_array[i].fd >= 0)
+        {
+            close(fd_array[i].fd);
+            fd_array[i].fd = -1;
+        }
     }
 
     return 1;
