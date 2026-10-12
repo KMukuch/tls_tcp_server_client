@@ -1,6 +1,6 @@
 # CMakeLists.txt
 cmake_minimum_required(VERSION 3.10)
-project(tsl_tcp_client VERSION 0.1.0 LANGUAGES C)
+project(tls_tcp_client VERSION 0.1.0 LANGUAGES C)
 
 # Set C standard (adjust to your needs: 99, 11, 17, etc.)
 set(CMAKE_C_STANDARD 99)
@@ -13,13 +13,13 @@ add_link_options(-fsanitize=address)
 # Dependencies
 find_package(OpenSSL REQUIRED)
 
-add_executable(tsl_tcp_client
+add_executable(tls_tcp_client
     src/client.c
 )
 
-target_include_directories(tsl_tcp_client PRIVATE include)
+target_include_directories(tls_tcp_client PRIVATE include)
 
-target_link_libraries(tsl_tcp_client PRIVATE
+target_link_libraries(tls_tcp_client PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
 )

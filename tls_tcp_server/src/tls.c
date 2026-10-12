@@ -10,8 +10,8 @@
 #include <unistd.h>
 #include "tls.h"
 
-#define CERT_PATH "..data/server.crt"
-#define KEY_PATH "..data/server.key"
+#define CERT_PATH "../data/server.crt"
+#define KEY_PATH "../data/server.key"
 
 SSL_CTX *tls_init(void)
 {

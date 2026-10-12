@@ -11,7 +11,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#define CERT_PATH "..data/server.crt"
+#define CERT_PATH "../data/server.crt"
 
 int main(int argc, char **argv)
 {
@@ -103,14 +103,14 @@ int main(int argc, char **argv)
     }
 
     // Verify identity
-    if (X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), ip_addr) != 1)
-    {
-        ERR_print_errors_fp(stderr);
-        SSL_free(ssl);
-        close(socket_fd);
-        SSL_CTX_free(ctx);
-        return 1;
-    }
+    // if (X509_VERIFY_PARAM_set1_ip_asc(SSL_get0_param(ssl), ip_addr) != 1)
+    // {
+    //     ERR_print_errors_fp(stderr);
+    //     SSL_free(ssl);
+    //     close(socket_fd);
+    //     SSL_CTX_free(ctx);
+    //     return 1;
+    // }
     // Handshake
     if (SSL_connect(ssl) != 1)
     {
