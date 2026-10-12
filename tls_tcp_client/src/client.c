@@ -11,6 +11,8 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
+#define CERT_PATH "..data/server.crt"
+
 int main(int argc, char **argv)
 {
     char buffer[1024];
@@ -26,12 +28,22 @@ int main(int argc, char **argv)
     }
 
     //This enables peer certificate verification and loads OpenSSL's configured default trust locations.
+    // SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
+    // if(SSL_CTX_set_default_verify_paths(ctx) != 1)
+    // {
+    //     ERR_print_errors_fp(stderr);
+    //     SSL_CTX_free(ctx);
+
+    //     return 1;
+    // }
+
+    // Require verification of the server's certificate.
     SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, NULL);
-    if(SSL_CTX_set_default_verify_paths(ctx) != 1)
+    // Trust your specific server certificate.
+    if(SSL_CTX_load_verify_locations(ctx, CERT_PATH, NULL) != 1)
     {
         ERR_print_errors_fp(stderr);
         SSL_CTX_free(ctx);
-
         return 1;
     }
 
@@ -143,8 +155,7 @@ int main(int argc, char **argv)
     SSL_shutdown(ssl);
     SSL_free(ssl);
     SSL_CTX_free(ctx);
-    close(socket_fd);
-
+    
 	close(socket_fd);
 
     return 0;

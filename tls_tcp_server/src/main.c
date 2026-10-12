@@ -26,7 +26,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-
     SSL *ssl_array[MAX_CLIENTS] = {0};
 
 
@@ -48,6 +47,9 @@ int main(int argc, char *argv[])
 		{
 			perror("poll");
 			
+            server_close_fds(fd_array, MAX_CLIENTS);
+            tls_close(ssl_ctx);
+
 			return 1;
 		}
 		

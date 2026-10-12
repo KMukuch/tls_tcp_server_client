@@ -10,6 +10,9 @@
 #include <unistd.h>
 #include "tls.h"
 
+#define CERT_PATH "..data/server.crt"
+#define KEY_PATH "..data/server.key"
+
 SSL_CTX *tls_init(void)
 {
     SSL_CTX *ctx = SSL_CTX_new(TLS_server_method());
@@ -22,13 +25,21 @@ SSL_CTX *tls_init(void)
 	// SSL_CTX_use_certificate_chain_file() loads the certificate.
 	// SSL_CTX_use_PrivateKey_file() loads the private key.
 	// SSL_CTX_check_private_key() checks that the key matches the certificate.
-	if (SSL_CTX_use_certificate_chain_file(ctx, "server.crt") != 1 || SSL_CTX_use_PrivateKey_file(ctx, "server.key", SSL_FILETYPE_PEM) != 1 || SSL_CTX_check_private_key(ctx) != 1)
+	if (SSL_CTX_use_certificate_chain_file(ctx, CERT_PATH) != 1 || SSL_CTX_use_PrivateKey_file(ctx, KEY_PATH, SSL_FILETYPE_PEM) != 1 || SSL_CTX_check_private_key(ctx) != 1)
 	{
 		ERR_print_errors_fp(stderr);
 		SSL_CTX_free(ctx);
 
 		return NULL;
 	}
+    // TLS versions older than TLS 1.2 are deprecated by IETF and SHOULD be avoided if possible.
+    if(SSL_CTX_set_min_proto_version(ctx, TLS1_2_VERSION) != 1)
+    {
+        ERR_print_errors_fp(stderr);
+        SSL_CTX_free(ctx);
+
+        return NULL;
+    }
 
     return ctx;
 }
